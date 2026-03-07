@@ -1,200 +1,107 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
+import 'theme/app_colors.dart';
+import 'screens/ootd_screen.dart';
 
-void main() => runApp(const MaterialApp(
-      home: FashionScanner(),
-      debugShowCheckedModeBanner: false,
-    ));
-
-class FashionScanner extends StatefulWidget {
-  const FashionScanner({super.key});
-
-  @override
-  State<FashionScanner> createState() => _FashionScannerState();
+void main() {
+  runApp(const SwaggyyApp());
 }
 
-class _FashionScannerState extends State<FashionScanner> {
-  File? _imageFile;
-  List<dynamic> _detections = [];
-  bool _isLoading = false;
+class SwaggyyApp extends StatelessWidget {
+  const SwaggyyApp({super.key});
 
-  // Use 10.0.2.2 for Android Emulator to reach localhost. 
-  // Change to your actual machine IP if using a physical device.
-  final String _serverUrl = 'http://10.0.2.2:8000/detect';
-
-  Future<void> _scanClothes() async {
-    final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85, // Reduce size for faster upload
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Swaggyy',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+        ),
+        scaffoldBackgroundColor: AppColors.background,
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
-
-    if (image == null) return;
-
-    setState(() {
-      _imageFile = File(image.path);
-      _isLoading = true;
-      _detections = [];
-    });
-
-    try {
-      var request = http.MultipartRequest('POST', Uri.parse(_serverUrl));
-      request.files.add(await http.MultipartFile.fromPath('file', image.path));
-
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _detections = data['detections'];
-        });
-      } else {
-        _showError("Server Error: ${response.statusCode}");
-      }
-    } catch (e) {
-      _showError("Connection failed. Ensure server is running at $_serverUrl");
-    } finally {
-      setState(() => _isLoading = false);
-    }
   }
+}
 
-  void _showError(String message) {
-    if (kDebugMode) print(message);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  // The content for each of the three tabs
+  static const List<Widget> _pages = <Widget>[
+    Center(
+      child: Text(
+        'My Wardrobe',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    ),
+    OotdScreen(),
+    Center(
+      child: Text(
+        'Account',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    ),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Gator Fashion Scanner"),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          // Image Preview Section
-          Expanded(
-            flex: 2,
-            child: Container(
-              width: double.infinity,
-              color: Colors.grey[200],
-              child: _imageFile == null
-                  ? const Center(child: Text("Capture a photo to detect clothes"))
-                  : Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Image.file(_imageFile!, fit: BoxFit.contain),
-                        if (_isLoading)
-                          const CircularProgressIndicator(color: Colors.indigo),
-                        // Overlay boxes using the dominant color
-                        if (!_isLoading)
-                          ..._detections.map((d) {
-                            final box = d['box'];
-                            final List<dynamic> color = d['color'] ?? [255, 0, 0];
-                            final Color displayColor = Color.fromARGB(
-                              255,
-                              color[0].toInt(),
-                              color[1].toInt(),
-                              color[2].toInt(),
-                            );
-                            
-                            // Basic layout builder isn't perfect for Stack on top of BoxFit.contain,
-                            // but this will show the boxes.
-                            return Positioned(
-                              left: box[0].toDouble(),
-                              top: box[1].toDouble(),
-                              width: (box[2] - box[0]).toDouble(),
-                              height: (box[3] - box[1]).toDouble(),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: displayColor, width: 3),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                      ],
-                    ),
+        // Welcome message on the top
+        title: const Text(
+          'What\'s the vibe today?',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          // Widget on the top right corner for weather integration
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            alignment: Alignment.center,
+            child: const Row(
+              children: [
+                Icon(Icons.wb_sunny, color: AppColors.weatherSun),
+                SizedBox(width: 8),
+                Text(
+                  '72°F', // Placeholder for actual weather temperature
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-          ),
-
-          // Data Table Section
-          const Divider(height: 1, thickness: 2),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              "Detections (${_detections.length})",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: _detections.isEmpty
-                ? const Center(child: Text("No data to display"))
-                : SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: MaterialStateProperty.all(Colors.indigo[50]),
-                        columns: const [
-                          DataColumn(label: Text('Label')),
-                          DataColumn(label: Text('Confidence')),
-                          DataColumn(label: Text('Main Color')),
-                          DataColumn(label: Text('Box (xmin, ymin, xmax, ymax)')),
-                        ],
-                        rows: _detections.map((d) {
-                          final List<dynamic> color = d['color'] ?? [0, 0, 0];
-                          final List<dynamic> box = d['box'];
-                          final Color displayColor = Color.fromARGB(
-                            255,
-                            color[0].toInt(),
-                            color[1].toInt(),
-                            color[2].toInt(),
-                          );
-
-                          return DataRow(cells: [
-                            DataCell(Text(d['label'].toString().toUpperCase(), 
-                                style: const TextStyle(fontWeight: FontWeight.bold))),
-                            DataCell(Text("${(d['confidence'] * 100).toStringAsFixed(1)}%")),
-                            DataCell(
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: displayColor,
-                                      border: Border.all(color: Colors.black26),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text("RGB(${color[0]}, ${color[1]}, ${color[2]})"),
-                                ],
-                              ),
-                            ),
-                            DataCell(Text(box.join(", "))),
-                          ]);
-                        }).toList(),
-                      ),
-                    ),
-                  ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _scanClothes,
-        backgroundColor: Colors.indigo,
-        label: const Text("Scan Clothing"),
-        icon: const Icon(Icons.camera_alt),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checkroom),
+            label: 'My Wardrobe',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'OOTD'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Account'),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        onTap: _onItemTapped,
       ),
     );
   }
