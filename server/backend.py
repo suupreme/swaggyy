@@ -1,13 +1,15 @@
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+import torch
+from transformers import AutoImageProcessor, AutoModelForObjectDetection # Removed AutoModelForImageSegmentation
+from PIL import Image
 import io
-import colorsys
 import uvicorn
 import numpy as np
 import cv2
-import torch
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
-from transformers import AutoImageProcessor, AutoModelForObjectDetection
+import colorsys
+from sklearn.cluster import KMeans
+# from torchvision.transforms.functional import normalize # Removed normalize
 
 app = FastAPI()
 
@@ -20,36 +22,75 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Load model and processor globally
+# Load models and processor globally
 device = "cuda" if torch.cuda.is_available() else "cpu"
-CHECKPOINT = "yainage90/fashion-object-detection"
+CHECKPOINT_OBJECT_DETECTION = "yainage90/fashion-object-detection" # Renamed for clarity
+# CHECKPOINT_BACKGROUND_REMOVAL = "briaai/RMBG-1.4" # Removed new checkpoint
 
-print(f"Loading model to {device}...")
-processor = AutoImageProcessor.from_pretrained(CHECKPOINT)
-model = AutoModelForObjectDetection.from_pretrained(CHECKPOINT).to(device)
+print(f"Loading object detection model to {device}...")
+processor = AutoImageProcessor.from_pretrained(CHECKPOINT_OBJECT_DETECTION)
+model = AutoModelForObjectDetection.from_pretrained(CHECKPOINT_OBJECT_DETECTION).to(device)
+
+# Removed background removal model loading and function
+# print(f"Loading background removal model to {device}...")
+# rmbg_model = AutoModelForImageSegmentation.from_pretrained(CHECKPOINT_BACKGROUND_REMOVAL, trust_remote_code=True)
+# rmbg_model.to(device)
+# rmbg_model.eval() # Set to evaluation mode
+
+# Removed Function to remove background
+# def remove_background(pil_image):
+#     orig_im = pil_image.convert("RGB") # Ensure RGB
+#     w, h = orig_im.size
+    
+#     image = orig_im.resize((1024, 1024), Image.BILINEAR) # Resize to 1024x1024 for RMBG model
+#     im_np = np.array(image) / 255.0
+#     im_tensor = torch.tensor(im_np, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+#     im_tensor = normalize(im_tensor, [0.5, 0.5, 0.5], [1.0, 1.0, 1.0]).to(device)
+
+#     with torch.no_grad():
+#         result = rmbg_model(im_tensor)
+    
+#     # Post-process mask
+#     result = torch.nn.functional.interpolate(result[0][0].unsqueeze(0), size=(h, w), mode='bilinear', align_corners=False).squeeze(0)
+#     result = (result - result.min()) / (result.max() - result.min())
+#     mask = (result * 255).cpu().data.numpy().astype(np.uint8)
+    
+#     mask_pil = Image.fromarray(mask)
+    
+#     # Create an RGBA image where background is transparent
+#     no_bg_image = Image.new("RGBA", orig_im.size, (0,0,0,0))
+#     no_bg_image.paste(orig_im, mask=mask_pil)
+    
+#     return no_bg_image
 
 @app.post("/detect")
 async def detect_fashion(file: UploadFile = File(...)):
     try:
         # 1. Read and validate image
         content = await file.read()
-        image = enhance_lighting(Image.open(io.BytesIO(content)).convert("RGB"))
+        image = Image.open(io.BytesIO(content)).convert("RGB")
         
-        # 2. Run Inference
-        inputs = processor(images=image, return_tensors="pt").to(device)
+        # 2. Remove background from the image (THIS STEP IS SKIPPED AS PER USER'S REQUEST TO STICK WITH OG MODEL)
+        # processed_image = remove_background(image)
+        # Use original image for inference
+        processed_image = image 
+        
+        # 3. Run Inference on the image (original image as per user's request)
+        inputs = processor(images=processed_image, return_tensors="pt").to(device) # Original image for object detection
         with torch.no_grad():
             outputs = model(**inputs)
         
-        # 3. Post-process
-        target_sizes = torch.tensor([[image.size[1], image.size[0]]])
+        # 4. Post-process
+        target_sizes = torch.tensor([[processed_image.size[1], processed_image.size[0]]])
         results = processor.post_process_object_detection(
             outputs, threshold=0.4, target_sizes=target_sizes
         )[0]
         
-        # 4. Format Results
+        # 5. Format Results
         detections = []
         for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
-            color_rgb = get_dominant_color(image, box.tolist())
+            # Get dominant color from the original image (or processed_image if appropriate)
+            color_rgb = get_dominant_color(image, box.tolist()) 
             detections.append({
                 "label": model.config.id2label[label.item()],
                 "confidence": round(score.item(), 3),
@@ -81,13 +122,44 @@ def get_dominant_color(image, box):
             return [0, 0, 0]
 
         crop = image.crop((xmin, ymin, xmax, ymax))
+        
+        # Convert PIL Image to NumPy array for color processing
         img_array = np.array(crop)
         
         if img_array.size == 0:
             return [0, 0, 0]
             
-        avg_color = img_array.mean(axis=(0, 1))
-        return [int(c) for c in avg_color]
+        # Convert RGB image array to OpenCV BGR for YCrCb conversion
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        img_ycrcb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2YCrCb)
+
+        # Define YCrCb skin color range
+        lower_skin = np.array([0, 133, 77], dtype=np.uint8)
+        upper_skin = np.array([255, 173, 127], dtype=np.uint8)
+
+        # Create a mask for non-skin pixels
+        skin_mask = cv2.inRange(img_ycrcb, lower_skin, upper_skin)
+        non_skin_mask = cv2.bitwise_not(skin_mask)
+
+        # Apply the non-skin mask to the original RGB pixels
+        pixels = img_array.reshape(-1, 3)
+        non_skin_pixels_flat_mask = non_skin_mask.flatten()
+        
+        non_skin_pixels = pixels[non_skin_pixels_flat_mask == 255]
+        
+        if non_skin_pixels.size == 0:
+            return [0, 0, 0] # Return black if no non-skin pixels found
+
+        # Apply K-Means clustering to find the dominant color among non-skin pixels
+        kmeans = KMeans(n_clusters=3, random_state=0, n_init=10) # Reverted n_clusters to 3
+        kmeans.fit(non_skin_pixels)
+        
+        # Find the largest cluster and its color
+        counts = np.bincount(kmeans.labels_)
+        dominant_cluster_index = np.argmax(counts)
+        dominant_color = kmeans.cluster_centers_[dominant_cluster_index]
+        
+        return [int(c) for c in dominant_color]
     except Exception as e:
         print(f"Color error: {e}")
         return [0, 0, 0]

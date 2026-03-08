@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'theme/app_colors.dart';
 import 'screens/ootd_screen.dart';
+import 'screens/wardrobe_screen.dart'; // Import the new WardrobeScreen
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -57,7 +56,6 @@ class SwaggyyApp extends StatelessWidget {
   }
 }
 
-
 class HomeScreen extends StatefulWidget {
   final String userId;
   const HomeScreen({super.key, required this.userId});
@@ -75,16 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pages = <Widget>[
-      const Center(
-        child: Text(
-          'My Wardrobe',
-          style: TextStyle(
-            fontFamily: 'Dream-Avenue',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      WardrobeScreen(userId: widget.userId),
       OotdScreen(userId: widget.userId),
       const Center(
         child: Text(
@@ -167,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          '72°F',
+                          '83°F', // Hardcoded dummy temperature
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

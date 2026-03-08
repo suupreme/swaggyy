@@ -23,7 +23,7 @@ class _OotdScreenState extends State<OotdScreen> {
   bool _hasScannedWardrobe = false;
   bool _scanAttemptedWithNoDetections = false;
 
-  final String _serverUrl = 'http://10.0.2.2:8000/detect';
+  final String _serverUrl = 'https://8b9f-97-104-30-252.ngrok-free.app/detect';
   File? _imageFile;
   bool _isLoading = false;
   List<dynamic> _detections = [];

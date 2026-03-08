@@ -1,0 +1,25 @@
+info:
+  name: test
+  type: http
+  seq: 1
+
+http:
+  method: post
+  url: http://localhost:11434/api/generate
+  body:
+    type: form-urlencoded
+    data:
+      - name: |-
+          {
+            "model": "mistral",
+            "prompt": "What should I wear with a blue denim jacket?",
+            "stream": false
+          }
+        value: ""
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
