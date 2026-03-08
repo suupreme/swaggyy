@@ -81,6 +81,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   // Method to categorize labels (similar to OotdScreen)
   bool _isTop(String label) {
     label = label.toLowerCase();
+    if (label.contains('shoe')) return false; // Exclude shoes
     return label.contains('shirt') ||
         label.contains('t-shirt') ||
         label.contains('blouse') ||
@@ -92,6 +93,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   bool _isBottom(String label) {
     label = label.toLowerCase();
+    if (label.contains('shoe')) return false; // Exclude shoes
     return label.contains('pants') ||
         label.contains('jeans') ||
         label.contains('shorts') ||
@@ -149,35 +151,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     });
   }
 
-  void _showImageSourceSelection(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bc) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _imageProcessor.pickAndProcessImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _imageProcessor.pickAndProcessImage(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -202,9 +176,34 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                   padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator(color: AppColors.primary),
                 )
-              : IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _showImageSourceSelection(context),
+              : PopupMenuButton<ImageSource>(
+                  icon: const Icon(Icons.add), // Add icon
+                  onSelected: (ImageSource source) {
+                    _imageProcessor.pickAndProcessImage(source);
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<ImageSource>>[
+                        const PopupMenuItem<ImageSource>(
+                          value: ImageSource.camera,
+                          child: Row(
+                            children: [
+                              Icon(Icons.camera_alt),
+                              SizedBox(width: 8),
+                              Text('Take Photo'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem<ImageSource>(
+                          value: ImageSource.gallery,
+                          child: Row(
+                            children: [
+                              Icon(Icons.photo_library),
+                              SizedBox(width: 8),
+                              Text('Choose from Gallery'),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
           // New Refresh Button
           if (!_isLoadingOutfits) // Only show refresh if not already loading outfits

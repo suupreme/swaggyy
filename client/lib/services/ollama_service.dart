@@ -133,7 +133,7 @@ class OllamaService {
       "label": "[label of chosen bottom]",
       "color": "RGB([r],[g],[b])"
     },
-    "reason": "Explain briefly why this combination works well (e.g., 'The colors are complementary and create a balanced look.')"
+    "reason": "Explain why this combination works well (max 15 words, e.g., 'The colors are complementary and create a balanced look.')"
   }
 }
 ''');
@@ -203,7 +203,7 @@ class OllamaService {
       "label": "[label of chosen bottom]",
       "color": "RGB([r],[g],[b])"
     },
-    "reason": "Explain briefly why this combination works well."
+    "reason": "Explain why this combination works well (max 15 words)."
   },
   // Add more outfit suggestions here
 ]
@@ -354,8 +354,8 @@ class OllamaService {
     const String cacheDocumentId = 'wardrobe_combinations';
     const Duration maxCacheAge = Duration(hours: 24);
 
-    if (!forceRefresh) {
-      // Check cache only if not forcing refresh
+    if (!forceRefresh) { // Check cache only if not forcing refresh
+      if (kDebugMode) print('Checking cache for wardrobe combinations...');
       try {
         final DocumentSnapshot<Map<String, dynamic>> doc =
             await FirebaseFirestore.instance
@@ -372,15 +372,26 @@ class OllamaService {
 
             if (timestamp != null && cachedTopIds != null && cachedBottomIds != null) {
               final DateTime cacheTime = timestamp.toDate();
-              // Check if cache is still fresh
-              if (DateTime.now().difference(cacheTime) < maxCacheAge) {
-                // Compare current items with cached items to ensure they are for the same wardrobe state
+              final Duration age = DateTime.now().difference(cacheTime);
+              if (kDebugMode) {
+                print('Cache found. Age: $age, Max Age: $maxCacheAge');
+              }
+
+              if (age < maxCacheAge) {
                 final List<String> currentTopIds = tops.map((e) => e.id).toList()..sort();
                 final List<String> currentBottomIds = bottoms.map((e) => e.id).toList()..sort();
 
-                // Convert cached IDs to List<String> and sort them for comparison
                 final List<String> sortedCachedTopIds = List<String>.from(cachedTopIds)..sort();
                 final List<String> sortedCachedBottomIds = List<String>.from(cachedBottomIds)..sort();
+
+                if (kDebugMode) {
+                  print('Current Tops IDs: $currentTopIds');
+                  print('Cached Tops IDs: $sortedCachedTopIds');
+                  print('Tops Match: ${listEquals(sortedCachedTopIds, currentTopIds)}');
+                  print('Current Bottoms IDs: $currentBottomIds');
+                  print('Cached Bottoms IDs: $sortedCachedBottomIds');
+                  print('Bottoms Match: ${listEquals(sortedCachedBottomIds, currentBottomIds)}');
+                }
 
                 if (listEquals(sortedCachedTopIds, currentTopIds) && listEquals(sortedCachedBottomIds, currentBottomIds)) {
                   if (kDebugMode)
@@ -404,7 +415,11 @@ class OllamaService {
                 if (kDebugMode)
                   print('Cached outfit combinations are stale. Refetching.');
               }
+            } else {
+              if (kDebugMode) print('Cached data incomplete. Refetching.');
             }
+          } else {
+            if (kDebugMode) print('Cached data is null. Refetching.');
           }
         } else {
           if (kDebugMode)

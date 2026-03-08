@@ -38,17 +38,20 @@ class ImageProcessor {
   // Method to categorize labels (similar to WardrobeScreen)
   bool _isTop(String label) {
     label = label.toLowerCase();
+    if (label.contains('shoe')) return false; // Exclude shoes
     return label.contains('shirt') ||
         label.contains('t-shirt') ||
         label.contains('blouse') ||
         label.contains('sweater') ||
         label.contains('hoodie') ||
         label.contains('jacket') ||
-        label == 'top';
+        label == 'top' ||
+        label == 'outer'; // New condition for 'outer'
   }
 
   bool _isBottom(String label) {
     label = label.toLowerCase();
+    if (label.contains('shoe')) return false; // Exclude shoes
     return label.contains('pants') ||
         label.contains('jeans') ||
         label.contains('shorts') ||
