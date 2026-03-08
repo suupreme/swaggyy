@@ -1,3 +1,4 @@
+import 'dart:async'; // 1. Added for the Timer
 import 'package:flutter/material.dart';
 import 'theme/app_colors.dart';
 import 'screens/ootd_screen.dart';
@@ -26,8 +27,64 @@ class SwaggyyApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(), // 2. Updated to start with SplashScreen
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// 3. New Splash Screen Widget
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Navigate to HomeScreen after 2.5 seconds
+    Timer(const Duration(milliseconds: 2500), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor:
+          Colors.white, // Using your primary color for the background
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.checkroom, // A temporary placeholder logo
+              size: 80,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'swaggyy',
+              style: TextStyle(
+                fontFamily: 'Dream-Avenue', // Using your custom font
+                fontSize: 42,
+                fontWeight: FontWeight.w500,
+                color: AppColors.primary,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 24),
+            CircularProgressIndicator(
+              color: AppColors.primary.withOpacity(0.8),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -93,7 +150,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontFamily: 'Dream-Avenue',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppColors
+                              .textPrimary, // Make sure AppColors.textPrimary is defined
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -122,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(
                           Icons.wb_sunny,
-                          color: AppColors.weatherSun,
+                          color: AppColors
+                              .weatherSun, // Make sure AppColors.weatherSun is defined
                           size: 20,
                         ),
                         SizedBox(width: 8),
