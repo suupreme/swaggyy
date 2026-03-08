@@ -41,7 +41,7 @@ dependencies:
   material_symbols_icons: ^4.2906.0
   flutter_launcher_icons: ^0.14.4
 
-  flutter_launcher_icons:
+flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/images/swaggyy_logo.png"
