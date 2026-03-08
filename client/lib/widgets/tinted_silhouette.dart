@@ -34,7 +34,9 @@ class TintedSilhouette extends StatelessWidget {
           ),
           Positioned(
             top: 110.0, // Positioned after shirt + gap
-            left: (100 - 80) / 2, // Center the smaller pants under the wider shirt
+            left:
+                (100 - 80) /
+                2, // Center the smaller pants under the wider shirt
             child: SvgPicture.asset(
               'assets/images/pants-svgrepo-com.svg',
               width: 80.0,
