@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme/app_colors.dart';
 import 'screens/ootd_screen.dart';
 import 'screens/wardrobe_screen.dart';
+import 'screens/account_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -42,16 +43,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // The content for each of the three tabs
   static const List<Widget> _pages = <Widget>[
     WardrobeScreen(),
     OotdScreen(),
-    Center(
-      child: Text(
-        'Account',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-    ),
+    AccountScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -74,9 +69,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
+      backgroundColor: _selectedIndex == 2 ? const Color(0xFF262626) : AppColors.background,
+      body: _selectedIndex == 2
+          ? const AccountScreen()
+          : SafeArea(
+              child: Column(
+                children: [
             // Custom Header area replacing the AppBar
             Padding(
               padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 16.0),
@@ -145,9 +143,68 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+      bottomNavigationBar: _selectedIndex == 2
+          ? SafeArea(
+              child: Container(
+                color: AppColors.primary,
+                child: NavigationBarTheme(
+                  data: NavigationBarThemeData(
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                    indicatorShape: const CircleBorder(),
+                    indicatorColor: Colors.black.withOpacity(0.08),
+                  ),
+                  child: NavigationBar(
+                    height: 80,
+                    backgroundColor: AppColors.primary,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: _onItemTapped,
+                    destinations: [
+                      const NavigationDestination(
+                        icon: Icon(Icons.checkroom_outlined, size: 36, color: Colors.black87),
+                        label: 'Wardrobe',
+                      ),
+                      const NavigationDestination(
+                        icon: Icon(Icons.home_outlined, size: 36, color: Colors.black87),
+                        label: 'Home',
+                      ),
+                      NavigationDestination(
+                        icon: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black, width: 2),
+                            gradient: const SweepGradient(
+                              colors: [
+                                Color(0xFFD95A4D),
+                                Color(0xFFE89A4E),
+                                Color(0xFFEDC951),
+                                Color(0xFF558988),
+                                Color(0xFFD95A4D),
+                              ],
+                            ),
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary,
+                            ),
+                            child: const Icon(Icons.person_outline, size: 20, color: Colors.black),
+                          ),
+                        ),
+                        label: 'Account',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : SafeArea(
+              child: Container(
+                margin: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(40),
