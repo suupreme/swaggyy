@@ -41,10 +41,7 @@ dependencies:
   material_symbols_icons: ^4.2906.0
   flutter_launcher_icons: ^0.14.4
 
-  flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/images/swaggyy_logo.png"
+
   # Optional: use adaptive icons for Android 8.0 and above
   # adaptive_icon_foreground: "assets/icon/my_logo_foreground.png"
   # adaptive_icon_background: "#FFFFFF"
