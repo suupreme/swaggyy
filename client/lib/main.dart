@@ -51,8 +51,7 @@ class SwaggyyApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         useMaterial3: true,
       ),
-      home: HomeScreen(userId: userId),
-      home: const SplashScreen(), // 2. Updated to start with SplashScreen
+      home: SplashScreen(userId: userId),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -60,7 +59,8 @@ class SwaggyyApp extends StatelessWidget {
 
 // 3. New Splash Screen Widget
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final String userId;
+  const SplashScreen({super.key, required this.userId});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Navigate to HomeScreen after 2.5 seconds
     Timer(const Duration(milliseconds: 2500), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen(userId: widget.userId)),
       );
     });
   }
@@ -125,7 +125,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
 
-<<<<<<< HEAD
+
   late final List<Widget> _pages;
 
   @override

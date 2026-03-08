@@ -42,15 +42,6 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_svg: ^2.2.4
   carousel_slider: ^5.0.0
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/images/swaggyy_app_icon.png" # Updated to swaggyy_app_icon.png based on project structure
-  # Optional: use adaptive icons for Android 8.0 and above
-  # adaptive_icon_foreground: "assets/icon/my_logo_foreground.png"
-  # adaptive_icon_background: "#FFFFFF"
-
   firebase_core: ^2.32.0
   cloud_firestore: ^4.15.0
   firebase_auth: ^4.16.0
