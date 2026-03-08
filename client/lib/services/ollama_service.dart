@@ -78,8 +78,18 @@ class OllamaService {
   ) {
     final StringBuffer prompt = StringBuffer();
     prompt.writeln(
-      'You are an expert fashion stylist. Your task is to suggest one complete outfit (one top and one bottom) from the provided list of available clothing items. Focus strictly on creating aesthetically pleasing and harmonious color combinations.',
+      'You are an expert fashion stylist AI that specializes in color coordination for outfits.',
     );
+    prompt.writeln();
+    prompt.writeln('Your task is to recommend one complete top–bottom color combination that creates a visually pleasing outfit from the provided lists of available clothing items.');
+    prompt.writeln();
+    prompt.writeln('When evaluating combinations, you must analyze the following metrics:');
+    prompt.writeln('- **Saturation:** Determine how vivid or muted each RGB color is. Avoid pairing two extremely saturated colors unless they are intentionally complementary. Neutral or low-saturation bottoms can balance brighter tops.');
+    prompt.writeln('- **Brightness (Lightness/Darkness):** Determine the brightness of each color. Prefer combinations with balanced contrast (e.g., light top with darker bottom, or vice versa). Avoid combinations where both pieces are extremely bright or extremely dark unless the hues complement each other well.');
+    prompt.writeln('- **Color Wheel Distance:** Convert RGB colors to HSV or HSL to determine hue position on the color wheel. Favor combinations that follow common fashion color relationships: Complementary (opposite on color wheel), Analogous (close on color wheel), Neutral pairings (e.g., black, white, gray, beige with many colors).');
+    prompt.writeln('- **Fashion Practicality:** Consider common clothing color conventions (e.g., neutral bottoms are versatile). Avoid clashing color pairs that would generally be considered visually unpleasant.');
+    prompt.writeln();
+    prompt.writeln('Focus strictly on creating aesthetically pleasing and harmonious color combinations based on these guidelines.');
     prompt.writeln();
     prompt.writeln('Available Clothing Items:');
     prompt.writeln('[BEGIN_ITEMS]');
@@ -136,8 +146,18 @@ class OllamaService {
   ) {
     final StringBuffer prompt = StringBuffer();
     prompt.writeln(
-      'You are an expert fashion stylist. Your task is to suggest multiple complete outfits (each with one top and one bottom) from the provided list of available clothing items. Focus strictly on creating aesthetically pleasing and harmonious color combinations. Prioritize unique combinations and avoid repeating the same top-bottom pairs. If you run out of good combinations, you can stop returning outfits.',
+      'You are an expert fashion stylist AI that specializes in color coordination for outfits.',
     );
+    prompt.writeln();
+    prompt.writeln('Your task is to recommend multiple complete top–bottom color combinations that create visually pleasing outfits from the provided lists of available clothing items. Prioritize unique combinations and avoid repeating the same top-bottom pairs. If you run out of good combinations, you can stop returning outfits.');
+    prompt.writeln();
+    prompt.writeln('When evaluating combinations, you must analyze the following metrics:');
+    prompt.writeln('- **Saturation:** Determine how vivid or muted each RGB color is. Avoid pairing two extremely saturated colors unless they are intentionally complementary. Neutral or low-saturation bottoms can balance brighter tops.');
+    prompt.writeln('- **Brightness (Lightness/Darkness):** Determine the brightness of each color. Prefer combinations with balanced contrast (e.g., light top with darker bottom, or vice versa). Avoid combinations where both pieces are extremely bright or extremely dark unless the hues complement each other well.');
+    prompt.writeln('- **Color Wheel Distance:** Convert RGB colors to HSV or HSL to determine hue position on the color wheel. Favor combinations that follow common fashion color relationships: Complementary (opposite on color wheel), Analogous (close on color wheel), Neutral pairings (e.g., black, white, gray, beige with many colors).');
+    prompt.writeln('- **Fashion Practicality:** Consider common clothing color conventions (e.g., neutral bottoms are versatile). Avoid clashing color pairs that would generally be considered visually unpleasant.');
+    prompt.writeln();
+    prompt.writeln('Focus strictly on creating aesthetically pleasing and harmonious color combinations based on these guidelines.');
     prompt.writeln();
     prompt.writeln('Available Clothing Items:');
     prompt.writeln('[BEGIN_ITEMS]');
