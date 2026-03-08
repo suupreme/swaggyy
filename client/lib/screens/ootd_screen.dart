@@ -239,11 +239,6 @@ class _OotdScreenState extends State<OotdScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                type,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              Text(
                 label.toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
@@ -253,14 +248,13 @@ class _OotdScreenState extends State<OotdScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
+              SvgPicture.asset(
+                type == 'Top'
+                    ? 'assets/images/shirt-svgrepo-com.svg'
+                    : 'assets/images/pants-svgrepo-com.svg',
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                width: type == 'Top' ? 100 : 80,
+                height: type == 'Top' ? 100 : 80,
               ),
             ],
           ),

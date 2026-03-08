@@ -5,6 +5,8 @@ import '../services/image_processor.dart';
 import '../services/ollama_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../widgets/tinted_silhouette.dart';
 
 class WardrobeScreen extends StatefulWidget {
   final String userId;
@@ -303,58 +305,9 @@ Scan more clothes or try again!""",
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  Text('TOP', style: TextStyle(color: topColor, fontSize: 12)),
-                  Text(
-                    suggestion.top.label.toUpperCase(),
-                    style: TextStyle(
-                      color: topColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: topColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 20),
-              Column(
-                children: [
-                  Text(
-                    'BOTTOM',
-                    style: TextStyle(color: bottomColor, fontSize: 12),
-                  ),
-                  Text(
-                    suggestion.bottom.label.toUpperCase(),
-                    style: TextStyle(
-                      color: bottomColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: bottomColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          TintedSilhouette(
+            shirtColor: topColor,
+            pantsColor: bottomColor,
           ),
           if (suggestion.reason.isNotEmpty)
             Padding(
