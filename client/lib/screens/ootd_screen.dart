@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OotdScreen extends StatefulWidget {
   const OotdScreen({super.key});
@@ -21,7 +22,9 @@ class _OotdScreenState extends State<OotdScreen> {
     // Give satisfying feedback
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Wardrobe scanned! Generating aesthetic recommendations...'),
+        content: Text(
+          'Wardrobe scanned! Generating aesthetic recommendations...',
+        ),
         duration: Duration(seconds: 2),
       ),
     );
@@ -101,13 +104,10 @@ class _OotdScreenState extends State<OotdScreen> {
           const SizedBox(height: 8),
           const Text(
             'Based on monochromatic color theory',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
-          
+
           // OOTD Display Card
           Container(
             width: double.infinity,
@@ -133,11 +133,15 @@ class _OotdScreenState extends State<OotdScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
-                    child: Icon(Icons.dry_cleaning, size: 60, color: AppColors.secondary),
+                    child: Icon(
+                      Icons.dry_cleaning,
+                      size: 60,
+                      color: AppColors.secondary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Bottom placeholder Image (e.g. Pants / Bottoms)
                 Container(
                   height: 220,
@@ -146,11 +150,15 @@ class _OotdScreenState extends State<OotdScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
-                    child: Icon(Icons.accessibility_new, size: 60, color: AppColors.secondary),
+                    child: Icon(
+                      Icons.accessibility_new,
+                      size: 60,
+                      color: AppColors.secondary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Color Palette Dots for the outfit
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -167,9 +175,9 @@ class _OotdScreenState extends State<OotdScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Generate New Vibe Button
           SizedBox(
             width: double.infinity,
@@ -182,7 +190,8 @@ class _OotdScreenState extends State<OotdScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.textPrimary, // Stark contrast for emphasis
+                backgroundColor:
+                    AppColors.textPrimary, // Stark contrast for emphasis
                 foregroundColor: AppColors.background,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -190,15 +199,15 @@ class _OotdScreenState extends State<OotdScreen> {
                 ),
               ),
               child: const Text(
-                'Generate Another Vibe', 
+                'Generate Another Vibe',
                 style: TextStyle(
-                  fontSize: 16, 
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
