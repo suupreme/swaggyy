@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'theme/app_colors.dart';
 import 'screens/ootd_screen.dart';
+import 'screens/wardrobe_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(const SwaggyyApp());
@@ -42,16 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // The content for each of the three tabs
   static const List<Widget> _pages = <Widget>[
-    Center(
-      child: Text(
-        'My Wardrobe',
-        style: TextStyle(
-          fontFamily: 'Dream-Avenue',
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
+    WardrobeScreen(),
     OotdScreen(),
     Center(
       child: Text(
@@ -170,10 +163,10 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(40),
             child: NavigationBarTheme(
               data: NavigationBarThemeData(
-                iconTheme: MaterialStateProperty.all(
+                iconTheme: WidgetStateProperty.all(
                   const IconThemeData(color: AppColors.textPrimary),
                 ),
-                labelTextStyle: MaterialStateProperty.all(
+                labelTextStyle: WidgetStateProperty.all(
                   const TextStyle(
                     fontFamily: 'SF',
                     fontSize: 13,
