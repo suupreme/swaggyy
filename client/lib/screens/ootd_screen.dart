@@ -22,7 +22,8 @@ class OotdScreen extends StatefulWidget {
 class _OotdScreenState extends State<OotdScreen> {
   bool _scanAttemptedWithNoDetections = false;
 
-  bool _isLoading = false;
+  bool _isOutfitGenerating = false;
+  bool _isImageProcessing = false;
 
   int _topCount = 0;
   int _bottomCount = 0;
@@ -45,6 +46,7 @@ class _OotdScreenState extends State<OotdScreen> {
   @override
   void initState() {
     super.initState();
+    _isOutfitGenerating = true; // Start with loading state for initial OOTD
     _ollamaService = OllamaService(
       'https://8e4d-97-104-30-252.ngrok-free.app/ollama_proxy',
       userId: widget.userId,
@@ -55,7 +57,7 @@ class _OotdScreenState extends State<OotdScreen> {
       serverUrl:
           'https://8e4d-97-104-30-252.ngrok-free.app/detect', // Backend server URL
       callbacks: ImageProcessingCallbacks(
-        onLoading: (loading) => setState(() => _isLoading = loading),
+        onLoading: (loading) => setState(() => _isImageProcessing = loading), // Use new state var
         onImagePicked: (file) {
           /* Removed as _imageFile is removed from OotdScreenState */
         },
@@ -73,9 +75,12 @@ class _OotdScreenState extends State<OotdScreen> {
             _allBottoms = allBottoms;
             _countsLoaded = true;
           });
-          // After counts are updated from a new scan, try to get an outfit suggestion
+          // After counts are updated, attempt to get an outfit suggestion
           if (_topCount >= 2 && _bottomCount >= 2) {
             _getOutfitSuggestion();
+          } else {
+            // If not enough clothes, ensure _isOutfitGenerating is false
+            setState(() { _isOutfitGenerating = false; });
           }
         },
       ),
@@ -86,31 +91,35 @@ class _OotdScreenState extends State<OotdScreen> {
   }
 
   Future<void> _getOutfitSuggestion({bool forceRefresh = false}) async {
+    // Only set loading state; do NOT clear _outfitSuggestion here.
+    // The previous outfit should remain displayed during refresh.
     setState(() {
-      _isLoading = true;
-      _outfitSuggestion = null; // Clear previous suggestion
+      _isOutfitGenerating = true;
     });
 
+    OutfitSuggestion? newSuggestion; // Temporary variable for the new suggestion
     try {
-      final suggestion = await _ollamaService.getOutfitSuggestion(
+      newSuggestion = await _ollamaService.getOutfitSuggestion(
         _allTops,
         _allBottoms,
-        forceRefresh: forceRefresh, // Pass the forceRefresh parameter
+        forceRefresh: forceRefresh,
       );
-      setState(() {
-        _outfitSuggestion = suggestion;
-      });
     } catch (e) {
       _showError('Failed to get outfit suggestion: $e');
+      // If error, the _outfitSuggestion remains whatever it was or null if first time.
     } finally {
       setState(() {
-        _isLoading = false;
+        _isOutfitGenerating = false;
+        // Update _outfitSuggestion only AFTER the call,
+        // and if it's null, then it genuinely means no suggestion was found.
+        _outfitSuggestion = newSuggestion;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // If counts aren't loaded yet, show initial loading
     if (!_countsLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -120,15 +129,15 @@ class _OotdScreenState extends State<OotdScreen> {
       return _buildEmptyState();
     } else {
       // If we have enough clothes, display the Mistral generated outfit
+      // If outfit is still generating, show loading
+      if (_isOutfitGenerating && _outfitSuggestion == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
       return _buildSuggestedOutfit();
     }
   }
 
   Widget _buildSuggestedOutfit() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     if (_outfitSuggestion == null) {
       return const Center(child: Text('No outfit suggestion found.'));
     }
@@ -150,46 +159,59 @@ class _OotdScreenState extends State<OotdScreen> {
     final Color bottomColor = _parseRgbString(_outfitSuggestion!.bottom.color);
 
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Stack( // Use a Stack to layer the content and the loading indicator
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Your Suggested Outfit:',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          Row(
+          Column( // Your main content for the outfit suggestion
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildOutfitItemCard(
-                _outfitSuggestion!.top.label,
-                topColor,
-                'Top',
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Your Suggested Outfit:',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
-              _buildOutfitItemCard(
-                _outfitSuggestion!.bottom.label,
-                bottomColor,
-                'Bottom',
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildOutfitItemCard(
+                    _outfitSuggestion!.top.label,
+                    topColor,
+                    'Top',
+                  ),
+                  const SizedBox(width: 16),
+                  _buildOutfitItemCard(
+                    _outfitSuggestion!.bottom.label,
+                    bottomColor,
+                    'Bottom',
+                  ),
+                ],
               ),
+              if (_outfitSuggestion!.reason.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Reason: ${_outfitSuggestion!.reason}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
             ],
           ),
-          if (_outfitSuggestion!.reason.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Reason: ${_outfitSuggestion!.reason}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.textSecondary,
+          if (_isOutfitGenerating) // Only show overlay if generating
+            Positioned.fill(
+              child: Container(
+                color: Colors.transparent, // Make the overlay transparent
+                child: const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
                 ),
               ),
             ),
@@ -287,7 +309,7 @@ class _OotdScreenState extends State<OotdScreen> {
                   shape: BoxShape.circle,
                   color: AppColors.primary.withOpacity(0.15),
                 ),
-                child: _isLoading
+                child: _isImageProcessing
                     ? const CircularProgressIndicator(color: AppColors.primary)
                     : const Icon(
                         Icons.camera_alt, // Camera icon for scanning
@@ -298,7 +320,7 @@ class _OotdScreenState extends State<OotdScreen> {
             ),
             const SizedBox(height: 40),
             Text(
-              _isLoading
+              _isImageProcessing
                   ? 'Scanning Wardrobe...'
                   : _scanAttemptedWithNoDetections
                   ? 'No items detected! Try again.'
