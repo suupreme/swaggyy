@@ -6,9 +6,9 @@ need to leave the house in a rush? swag up easily with swaggyy. made at SASEHack
 3. **Generates multiple outfit combinations** - will view and match the RGB values and suggest outfits
 4. **Gives an "outfit of the day"** - will give a recommendation based on the highest compatibility score
 ## Specifications
-**Frontend** - Flutter / Figma
-**Backend** - Python / OpenCV 
-**Databases** - Firebase
+1. **Frontend** - Flutter / Figma
+2. **Backend** - Python / OpenCV 
+3. **Databases** - Firebase
 ## Setup & Configuration
 1. Get Flutter and Dart
 2. Set up Firebase
