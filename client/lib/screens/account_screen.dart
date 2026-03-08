@@ -12,7 +12,7 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _isCelsius = false;
 
   final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _waistController = TextEditingController();
 
   String? _selectedGender;
   final List<String> _genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -57,6 +57,7 @@ class _AccountScreenState extends State<AccountScreen> {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: TextInputType.number,
               textAlign: TextAlign.right,
               style: const TextStyle(
                 fontFamily: 'SF',
@@ -69,6 +70,15 @@ class _AccountScreenState extends State<AccountScreen> {
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'in',
+            style: TextStyle(
+              fontFamily: 'SF',
+              fontSize: 18,
+              color: Colors.black54,
             ),
           ),
         ],
@@ -302,7 +312,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     children: [
                       _buildGenderDropdownRow(),
                       _buildEditableRow('Height', _heightController),
-                      _buildEditableRow('Weight', _weightController),
+                      _buildEditableRow('Waist', _waistController),
                       
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -310,7 +320,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              'Temperature',
+                              'Temp Units',
                               style: TextStyle(
                                 fontFamily: 'Dream-Avenue',
                                 fontSize: 28,
