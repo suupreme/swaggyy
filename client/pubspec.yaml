@@ -49,6 +49,9 @@ dependencies:
   # adaptive_icon_foreground: "assets/icon/my_logo_foreground.png"
   # adaptive_icon_background: "#FFFFFF"
 
+  firebase_core: ^2.32.0
+  cloud_firestore: ^4.15.0
+  firebase_auth: ^4.16.0
 
 dev_dependencies:
   flutter_test:

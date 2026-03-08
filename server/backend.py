@@ -1,13 +1,24 @@
 import io
+import colorsys
 import uvicorn
-from fastapi import FastAPI, File, UploadFile
-from PIL import Image
-import torch
-from transformers import AutoImageProcessor, AutoModelForObjectDetection
 import numpy as np
 import cv2
+import torch
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
+from transformers import AutoImageProcessor, AutoModelForObjectDetection
 
 app = FastAPI()
+
+# Add CORS middleware to allow all origins during development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Load model and processor globally
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -16,6 +27,46 @@ CHECKPOINT = "yainage90/fashion-object-detection"
 print(f"Loading model to {device}...")
 processor = AutoImageProcessor.from_pretrained(CHECKPOINT)
 model = AutoModelForObjectDetection.from_pretrained(CHECKPOINT).to(device)
+
+@app.post("/detect")
+async def detect_fashion(file: UploadFile = File(...)):
+    try:
+        # 1. Read and validate image
+        content = await file.read()
+        image = enhance_lighting(Image.open(io.BytesIO(content)).convert("RGB"))
+        
+        # 2. Run Inference
+        inputs = processor(images=image, return_tensors="pt").to(device)
+        with torch.no_grad():
+            outputs = model(**inputs)
+        
+        # 3. Post-process
+        target_sizes = torch.tensor([[image.size[1], image.size[0]]])
+        results = processor.post_process_object_detection(
+            outputs, threshold=0.4, target_sizes=target_sizes
+        )[0]
+        
+        # 4. Format Results
+        detections = []
+        for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+            color_rgb = get_dominant_color(image, box.tolist())
+            detections.append({
+                "label": model.config.id2label[label.item()],
+                "confidence": round(score.item(), 3),
+                "box": [round(i, 2) for i in box.tolist()],
+                "color": color_rgb,
+                "complementary_color": get_complementary_recommendation(color_rgb)
+            })
+        
+        print(f"Generated detections: {detections}") # Added debug log
+        return {"detections": detections}
+    except Exception as e:
+        print(f"Internal Error: {e}")
+        return {"detections": [], "error": str(e)}
+
+if __name__ == "__main__":
+    # Runs on all interfaces (needed for emulator/local network)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 def get_dominant_color(image, box):
     try:
@@ -59,41 +110,18 @@ def enhance_lighting(pil_image):
     
     return Image.fromarray(cv2.cvtColor(final_img, cv2.COLOR_BGR2RGB))
 
-@app.post("/detect")
-async def detect_fashion(file: UploadFile = File(...)):
-    try:
-        # 1. Read and validate image
-        content = await file.read()
-        image = enhance_lighting(Image.open(io.BytesIO(content)).convert("RGB"))
-        
-        # 2. Run Inference
-        inputs = processor(images=image, return_tensors="pt").to(device)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        
-        # 3. Post-process
-        target_sizes = torch.tensor([[image.size[1], image.size[0]]])
-        results = processor.post_process_object_detection(
-            outputs, threshold=0.4, target_sizes=target_sizes
-        )[0]
-        
-        # 4. Format Results
-        detections = []
-        for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
-            color_rgb = get_dominant_color(image, box.tolist())
-            detections.append({
-                "label": model.config.id2label[label.item()],
-                "confidence": round(score.item(), 3),
-                "box": [round(i, 2) for i in box.tolist()],
-                "color": color_rgb
-            })
-        
-        print(f"Detected {len(detections)} items") # Server-side log
-        return {"detections": detections}
-    except Exception as e:
-        print(f"Internal Error: {e}")
-        return {"detections": [], "error": str(e)}
-
-if __name__ == "__main__":
-    # Runs on all interfaces (needed for emulator/local network)
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+def get_complementary_recommendation(rgb_tuple):
+    # 1. Normalize RGB to 0-1 range
+    r, g, b = [x/255.0 for x in rgb_tuple]
+    
+    # 2. Convert to HSL
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    
+    # 3. Rotate Hue by 180 degrees (0.5 in 0-1 scale)
+    h_comp = (h + 0.5) % 1.0
+    
+    # 4. Convert back to RGB to show the user
+    r_c, g_c, b_c = colorsys.hls_to_rgb(h_comp, l, s)
+    complement_rgb = (int(r_c*255), int(g_c*255), int(b_c*255))
+    
+    return complement_rgb
