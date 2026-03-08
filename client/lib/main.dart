@@ -9,9 +9,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'theme/app_colors.dart';
 import 'screens/ootd_screen.dart';
-import 'screens/wardrobe_screen.dart'; // Import the new WardrobeScreen
+import 'screens/wardrobe_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,13 +68,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
 
+<<<<<<< HEAD
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _pages = <Widget>[
-      WardrobeScreen(userId: widget.userId),
+      WardrobeScreen(),
       OotdScreen(userId: widget.userId),
       const Center(
         child: Text(
@@ -191,10 +193,10 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(40),
             child: NavigationBarTheme(
               data: NavigationBarThemeData(
-                iconTheme: MaterialStateProperty.all(
+                iconTheme: WidgetStateProperty.all(
                   const IconThemeData(color: AppColors.textPrimary),
                 ),
-                labelTextStyle: MaterialStateProperty.all(
+                labelTextStyle: WidgetStateProperty.all(
                   const TextStyle(
                     fontFamily: 'SF',
                     fontSize: 13,
