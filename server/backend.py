@@ -9,6 +9,8 @@ import numpy as np
 import cv2
 import colorsys
 from sklearn.cluster import KMeans
+import requests
+from fastapi import HTTPException
 # from torchvision.transforms.functional import normalize # Removed normalize
 
 app = FastAPI()
@@ -104,6 +106,23 @@ async def detect_fashion(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Internal Error: {e}")
         return {"detections": [], "error": str(e)}
+
+@app.post("/ollama_proxy")
+async def ollama_proxy(request_body: dict):
+    try:
+        ollama_response = requests.post(
+            "http://localhost:11434/api/generate",
+            json=request_body,
+            timeout=120 # Add a timeout for the request
+        )
+        ollama_response.raise_for_status() # Raise an exception for HTTP errors
+        return ollama_response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error forwarding request to Ollama: {e}")
+        raise HTTPException(status_code=500, detail=f"Error connecting to Ollama: {e}")
+    except Exception as e:
+        print(f"Internal server error in Ollama proxy: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 if __name__ == "__main__":
     # Runs on all interfaces (needed for emulator/local network)

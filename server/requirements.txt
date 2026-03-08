@@ -9,3 +9,4 @@ opencv-python
 timm
 numpy
 scikit-learn
+requests

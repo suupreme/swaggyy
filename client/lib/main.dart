@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pages = <Widget>[
-      WardrobeScreen(),
+      WardrobeScreen(userId: widget.userId),
       OotdScreen(userId: widget.userId),
       const Center(
         child: Text(

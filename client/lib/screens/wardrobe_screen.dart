@@ -1,183 +1,293 @@
 import 'package:flutter/material.dart';
-import '../widgets/tinted_silhouette.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
+import '../services/image_processor.dart';
+import '../services/ollama_service.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
-// Port 1: A data model representing the outfit.
-// Coworkers can replace this or map their backend data to it.
-class OutfitModel {
-  final int shirtR;
-  final int shirtG;
-  final int shirtB;
-  final int pantsR;
-  final int pantsG;
-  final int pantsB;
-
-  const OutfitModel({
-    required this.shirtR,
-    required this.shirtG,
-    required this.shirtB,
-    required this.pantsR,
-    required this.pantsG,
-    required this.pantsB,
-  });
-
-  Color get shirtColor => Color.fromRGBO(shirtR, shirtG, shirtB, 1.0);
-  Color get pantsColor => Color.fromRGBO(pantsR, pantsG, pantsB, 1.0);
-}
-
 class WardrobeScreen extends StatefulWidget {
-  // Port 2: Pass down the data from a parent or state manager here.
-  // Set to null to show dummy data, or an empty list [] to show the empty state.
-  final List<OutfitModel>? outfits;
-
-  // Port 3: A callback triggered when the user wants to fetch data manually, or when screen loads.
-  final VoidCallback? onFetchData;
-
-  const WardrobeScreen({super.key, this.outfits, this.onFetchData});
+  final String userId;
+  const WardrobeScreen({super.key, required this.userId});
 
   @override
   State<WardrobeScreen> createState() => _WardrobeScreenState();
 }
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
-  // Dummy values for MVP until backend is connected.
-  final List<OutfitModel> _dummyData = [
-    const OutfitModel(
-      shirtR: 244,
-      shirtG: 67,
-      shirtB: 54,
-      pantsR: 33,
-      pantsG: 33,
-      pantsB: 33,
-    ), // Red top, dark pants
-    const OutfitModel(
-      shirtR: 100,
-      shirtG: 181,
-      shirtB: 246,
-      pantsR: 238,
-      pantsG: 238,
-      pantsB: 238,
-    ), // Light blue top, white pants
-    const OutfitModel(
-      shirtR: 76,
-      shirtG: 175,
-      shirtB: 80,
-      pantsR: 121,
-      pantsG: 85,
-      pantsB: 72,
-    ), // Green top, brown pants
-    const OutfitModel(
-      shirtR: 255,
-      shirtG: 193,
-      shirtB: 7,
-      pantsR: 21,
-      pantsG: 101,
-      pantsB: 192,
-    ), // Yellow top, blue pants
-  ];
+  late ImageProcessor _imageProcessor;
+  bool _isLoadingImage =
+      false; // New state to manage loading during image pick/process
+
+  // State for fetching and displaying outfit suggestions
+  late OllamaService _ollamaService;
+  List<ClothingItem> _allTops = [];
+  List<ClothingItem> _allBottoms = [];
+  List<OutfitSuggestion> _outfitSuggestions = [];
+  bool _isLoadingOutfits = true; // Initially loading outfits
 
   @override
   void initState() {
     super.initState();
 
-    // Call Port 3 gracefully if needed
-    if (widget.onFetchData != null) {
-      widget.onFetchData!();
-    }
+    _ollamaService = OllamaService(
+      'https://8e4d-97-104-30-252.ngrok-free.app/ollama_proxy',
+      userId: widget.userId,
+    );
+
+    _imageProcessor = ImageProcessor(
+      userId: widget.userId,
+      serverUrl:
+          'https://8e4d-97-104-30-252.ngrok-free.app/detect', // Backend server URL
+      callbacks: ImageProcessingCallbacks(
+        onLoading: (loading) => setState(() => _isLoadingImage = loading),
+        onImagePicked: (file) {
+          // Wardrobe screen doesn't need to display the image directly
+          // but can use this callback if needed for a preview
+        },
+        onDetections: (dets) {
+          // Wardrobe screen doesn't directly display detections, but confirms success
+          if (dets.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Clothes scanned and added!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No clothes detected in image.')),
+            );
+          }
+        },
+        onNoDetections: (noDets) {
+          if (noDets) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No clothes detected after scan.')),
+            );
+          }
+        },
+        onError: (message) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        ),
+        onCountsAndItemsUpdated: (topCount, bottomCount, allTops, allBottoms) {
+          // After a new item is scanned, refresh the outfit suggestions
+          _fetchOutfitsAndSuggestions();
+        },
+      ),
+    );
+
+    // Initial fetch of outfits and suggestions
+    _fetchOutfitsAndSuggestions();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  // Method to categorize labels (similar to OotdScreen)
+  bool _isTop(String label) {
+    label = label.toLowerCase();
+    return label.contains('shirt') ||
+        label.contains('t-shirt') ||
+        label.contains('blouse') ||
+        label.contains('sweater') ||
+        label.contains('hoodie') ||
+        label.contains('jacket') ||
+        label == 'top';
+  }
+
+  bool _isBottom(String label) {
+    label = label.toLowerCase();
+    return label.contains('pants') ||
+        label.contains('jeans') ||
+        label.contains('shorts') ||
+        label.contains('skirt') ||
+        label == 'bottom';
+  }
+
+  Future<void> _fetchOutfitsAndSuggestions({bool forceRefresh = false}) async {
+    setState(() {
+      _isLoadingOutfits = true;
+    });
+
+    final QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .collection('scanned_items')
+        .get();
+
+    List<ClothingItem> fetchedTops = [];
+    List<ClothingItem> fetchedBottoms = [];
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final String label = data['label']?.toString() ?? '';
+      final List<dynamic> colorRgb = data['mainColor'] ?? [0, 0, 0];
+      final ClothingItem item = ClothingItem(
+        id: doc.id,
+        label: label,
+        colorRgb: colorRgb.map((e) => e as int).toList(),
+      );
+
+      if (_isTop(label)) {
+        fetchedTops.add(item);
+      } else if (_isBottom(label)) {
+        fetchedBottoms.add(item);
+      }
+    }
+
+    List<OutfitSuggestion> suggestions = [];
+    // Only attempt to get suggestions if there are at least 2 tops and 2 bottoms
+    // This is a heuristic to ensure meaningful combinations can be generated.
+    if (fetchedTops.length >= 2 && fetchedBottoms.length >= 2) {
+      suggestions = await _ollamaService.getAllOutfitCombinations(
+        fetchedTops,
+        fetchedBottoms,
+        forceRefresh: forceRefresh, // Pass the forceRefresh parameter
+      );
+    }
+
+    setState(() {
+      _allTops = fetchedTops;
+      _allBottoms = fetchedBottoms;
+      _outfitSuggestions = suggestions;
+      _isLoadingOutfits = false;
+    });
+  }
+
+  void _showImageSourceSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take Photo'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _imageProcessor.pickAndProcessImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _imageProcessor.pickAndProcessImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // If widget.outfits is explicitly [], display empty state.
-    // Otherwise fallback to dummy data for demonstration.
-    final items = widget.outfits ?? _dummyData;
-
-    if (items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.checkroom_rounded,
-              size: 80,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "No outfits saved yet.\nConnect to back-end to load wardrobe!",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'SF',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
-        ),
-      );
+    if (_isLoadingOutfits) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "My Wardrobe",
-                style: TextStyle(
-                  fontFamily: 'Dream-Avenue',
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.add, color: AppColors.primary),
-                  onPressed: () {
-                    // Future backend port: Add outfit
-                  },
-                ),
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'My Wardrobe',
+          style: TextStyle(
+            fontFamily: 'Dream-Avenue',
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
-        Expanded(
-          child: CarouselSlider.builder(
-            itemCount: items.length,
-            options: CarouselOptions(
-              height: double.infinity,
-              viewportFraction: 0.85,
-              enlargeCenterPage: true,
-              autoPlay: true,
-              autoPlayInterval: const Duration(seconds: 4),
-              autoPlayCurve: Curves.fastOutSlowIn,
+        actions: [
+          _isLoadingImage
+              ? const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => _showImageSourceSelection(context),
+                ),
+          // New Refresh Button
+          if (!_isLoadingOutfits) // Only show refresh if not already loading outfits
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => _fetchOutfitsAndSuggestions(forceRefresh: true),
             ),
-            itemBuilder: (context, index, realIndex) {
-              return _buildWardrobeCard(items[index], index);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
+        ],
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_outfitSuggestions.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.checkroom_rounded,
+                      size: 80,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      """No outfit combinations yet.
+Scan more clothes or try again!""",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'SF',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: CarouselSlider.builder(
+                itemCount: _outfitSuggestions.length,
+                options: CarouselOptions(
+                  height: double.infinity,
+                  viewportFraction: 0.85,
+                  enlargeCenterPage: true,
+                  autoPlay: true,
+                  autoPlayInterval: const Duration(seconds: 4),
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                ),
+                itemBuilder: (context, index, realIndex) {
+                  return _buildOutfitCard(_outfitSuggestions[index]);
+                },
+              ),
+            ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 
-  Widget _buildWardrobeCard(OutfitModel outfit, int index) {
+  // Helper to parse RGB string to Color (copied from OotdScreen)
+  Color _parseRgbString(String rgbString) {
+    final regex = RegExp(r'RGB\((\d+),\s*(\d+),\s*(\d+)\)');
+    final match = regex.firstMatch(rgbString);
+    if (match != null && match.groupCount == 3) {
+      final r = int.parse(match.group(1)!);
+      final g = int.parse(match.group(2)!);
+      final b = int.parse(match.group(3)!);
+      return Color.fromARGB(255, r, g, b);
+    }
+    return Colors.grey; // Default color if parsing fails
+  }
+
+  // Build outfit card (copied and adapted from OotdScreen)
+  Widget _buildOutfitCard(OutfitSuggestion suggestion) {
+    final Color topColor = _parseRgbString(suggestion.top.color);
+    final Color bottomColor = _parseRgbString(suggestion.bottom.color);
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16.0),
       decoration: BoxDecoration(
@@ -185,85 +295,81 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: outfit.shirtColor.withOpacity(0.15),
+            color: topColor.withOpacity(0.15),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Background subtle decoration
-          Positioned(
-            top: -20,
-            right: -20,
-            child: CircleAvatar(
-              radius: 60,
-              backgroundColor: outfit.shirtColor.withOpacity(0.05),
-            ),
-          ),
-          Positioned(
-            bottom: -20,
-            left: -20,
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: outfit.pantsColor.withOpacity(0.05),
-            ),
-          ),
-          // Content
-          Column(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TintedSilhouette(
-                shirtColor: outfit.shirtColor,
-                pantsColor: outfit.pantsColor,
-                size: 130, // Reduced size further to fully prevent overflow on small vertical constraints
+              Column(
+                children: [
+                  Text('TOP', style: TextStyle(color: topColor, fontSize: 12)),
+                  Text(
+                    suggestion.top.label.toUpperCase(),
+                    style: TextStyle(
+                      color: topColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: topColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (widget.outfits != null) {
-                      widget.outfits!.removeAt(index);
-                    } else {
-                      _dummyData.removeAt(index);
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+              const SizedBox(width: 20),
+              Column(
+                children: [
+                  Text(
+                    'BOTTOM',
+                    style: TextStyle(color: bottomColor, fontSize: 12),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(20),
+                  Text(
+                    suggestion.bottom.label.toUpperCase(),
+                    style: TextStyle(
+                      color: bottomColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Wear',
-                        style: TextStyle(
-                          fontFamily: 'SF',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: bottomColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
+          if (suggestion.reason.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Reason: ${suggestion.reason}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
         ],
       ),
     );
