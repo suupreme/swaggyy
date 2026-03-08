@@ -1,1 +1,7 @@
-venv/
+.git/
+client/.dart_tool/
+client/build/
+server/__pycache__/
+server/venv/
+# Firebase Configuration
+client/lib/firebase_options.dart

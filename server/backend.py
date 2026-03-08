@@ -58,7 +58,7 @@ async def detect_fashion(file: UploadFile = File(...)):
                 "complementary_color": get_complementary_recommendation(color_rgb)
             })
         
-        print(f"Detected {len(detections)} items") # Server-side log
+        print(f"Generated detections: {detections}") # Added debug log
         return {"detections": detections}
     except Exception as e:
         print(f"Internal Error: {e}")

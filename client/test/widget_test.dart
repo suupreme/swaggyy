@@ -8,23 +8,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:clothing_recognizer/main.dart';
+import 'package:clothing_recognizer/main.dart'; // Corrected import
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('FashionScanner widget test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    // FashionScanner requires a userId, so we provide a dummy one.
+    await tester.pumpWidget(MaterialApp(
+      home: FashionScanner(userId: 'test_user_id'),
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that the FashionScanner widget is rendered.
+    expect(find.byType(FashionScanner), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // You can add more specific tests for FashionScanner functionalities here
+    // For example, finding specific texts or widgets.
+    expect(find.text('Fashion Scanner'), findsOneWidget);
+    expect(find.text('Capture a photo to detect clothes'), findsOneWidget);
   });
 }

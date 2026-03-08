@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "125853011907",
+    "project_id": "swaggyy-94695",
+    "storage_bucket": "swaggyy-94695.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125853011907:android:57d4c7cdfc3de20ff2b776",
+        "android_client_info": {
+          "package_name": "com.example.clothing_recognizer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgIfWF8q6jopuLp4TMs7kaElQvVsAb2lE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
