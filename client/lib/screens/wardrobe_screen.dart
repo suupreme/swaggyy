@@ -153,8 +153,6 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     if (_isLoadingOutfits) {
@@ -302,26 +300,60 @@ Scan more clothes or try again!""",
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          TintedSilhouette(
-            shirtColor: topColor,
-            pantsColor: bottomColor,
-          ),
-          if (suggestion.reason.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Reason: ${suggestion.reason}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.textSecondary,
+          // Background subtle decoration - Top Right Circle
+          Positioned(
+            top: -20,
+            right: -20,
+            child: CircleAvatar(
+              radius: 60,
+              backgroundColor: const Color(0xFF4B65F1).withValues(alpha: 0.7),
+              child: Container(
+                // For the white border
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
               ),
             ),
+          ),
+          // Background subtle decoration - Bottom Left Circle
+          Positioned(
+            bottom: -20,
+            left: -20,
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: const Color(0xFFA78BFA).withValues(alpha: 0.7),
+              child: Container(
+                // For the white border
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+              ),
+            ),
+          ),
+          Column(
+            // Original content
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TintedSilhouette(shirtColor: topColor, pantsColor: bottomColor),
+              if (suggestion.reason.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Reason: ${suggestion.reason}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );

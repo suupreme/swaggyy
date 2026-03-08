@@ -75,7 +75,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // Navigate to HomeScreen after 2.5 seconds
     Timer(const Duration(milliseconds: 2500), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreen(userId: widget.userId)),
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(userId: widget.userId),
+        ),
       );
     });
   }
@@ -89,10 +91,10 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.checkroom, // A temporary placeholder logo
-              size: 80,
-              color: AppColors.primary,
+            Image.asset(
+              'assets/images/swaggyy_logo.png',
+              width: 100,
+              height: 100,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -101,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontFamily: 'Dream-Avenue', // Using your custom font
                 fontSize: 42,
                 fontWeight: FontWeight.w500,
-                color: AppColors.primary,
+                color: Colors.black,
                 letterSpacing: 1.2,
               ),
             ),
@@ -127,7 +129,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
 
-
   late final List<Widget> _pages;
 
   @override
@@ -149,11 +150,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'Good Morning';
+      return 'Good Morning~';
     } else if (hour < 18) {
-      return 'Good Afternoon';
+      return 'Good Afternoon~';
     } else {
-      return 'Good Night';
+      return 'Good Night~';
     }
   }
 
@@ -176,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _getGreeting(),
                         style: const TextStyle(
                           fontFamily: 'Dream-Avenue',
-                          fontSize: 18,
+                          fontSize: 24,
                           fontWeight: FontWeight.w600,
                           color: AppColors
                               .textPrimary, // Make sure AppColors.textPrimary is defined

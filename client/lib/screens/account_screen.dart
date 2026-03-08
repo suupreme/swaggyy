@@ -15,30 +15,32 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _waistController = TextEditingController();
 
   String? _selectedGender;
-  final List<String> _genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
+  final List<String> _genderOptions = [
+    'Male',
+    'Female',
+    'Other',
+    'Prefer not to say',
+  ];
 
   Widget _buildStat(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, size: 40, color: Colors.black87),
+        Icon(icon, size: 25, color: Colors.black87),
         const SizedBox(height: 8),
         Text(
           value,
           style: const TextStyle(
             fontFamily: 'Dream-Avenue',
-            fontSize: 28,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'Dream-Avenue',
-            fontSize: 14,
-          ),
+          style: const TextStyle(fontFamily: 'Dream-Avenue', fontSize: 10),
         ),
-      ],
-    );
+      ], // Close the children list
+    ); // Close the Column
   }
 
   Widget _buildEditableRow(String label, TextEditingController controller) {
@@ -49,10 +51,7 @@ class _AccountScreenState extends State<AccountScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontFamily: 'Dream-Avenue',
-              fontSize: 28,
-            ),
+            style: const TextStyle(fontFamily: 'Dream-Avenue', fontSize: 20),
           ),
           Expanded(
             child: TextField(
@@ -94,10 +93,7 @@ class _AccountScreenState extends State<AccountScreen> {
         children: [
           const Text(
             'Gender',
-            style: TextStyle(
-              fontFamily: 'Dream-Avenue',
-              fontSize: 28,
-            ),
+            style: TextStyle(fontFamily: 'Dream-Avenue', fontSize: 20),
           ),
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -110,7 +106,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   color: Colors.black54,
                 ),
               ),
-              icon: const SizedBox.shrink(), // hide the default arrow optionally
+              icon:
+                  const SizedBox.shrink(), // hide the default arrow optionally
               alignment: AlignmentDirectional.centerEnd,
               style: const TextStyle(
                 fontFamily: 'SF',
@@ -141,7 +138,10 @@ class _AccountScreenState extends State<AccountScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: AppColors.background,
-          title: const Text('Share Profile', style: TextStyle(fontFamily: 'Dream-Avenue')),
+          title: const Text(
+            'Share Profile',
+            style: TextStyle(fontFamily: 'Dream-Avenue'),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -151,7 +151,10 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
@@ -162,7 +165,10 @@ class _AccountScreenState extends State<AccountScreen> {
                     const Expanded(
                       child: Text(
                         'swaggyy.app/u/me123',
-                        style: TextStyle(fontFamily: 'SF', color: Colors.black54),
+                        style: TextStyle(
+                          fontFamily: 'SF',
+                          color: Colors.black54,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -170,7 +176,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       icon: const Icon(Icons.copy, size: 20),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Link copied to clipboard!')),
+                          const SnackBar(
+                            content: Text('Link copied to clipboard!'),
+                          ),
                         );
                         Navigator.pop(context);
                       },
@@ -197,12 +205,13 @@ class _AccountScreenState extends State<AccountScreen> {
       color: AppColors.primary,
       child: SafeArea(
         bottom: false,
-        child: SingleChildScrollView( // Outer SingleChildScrollView for the entire content
+        child: SingleChildScrollView(
+          // Outer SingleChildScrollView for the entire content
           child: Column(
             children: [
               // "My Account" header
               Padding(
-                padding: const EdgeInsets.fromLTRB(28, 20, 28, 20),
+                padding: const EdgeInsets.fromLTRB(28, 15, 28, 15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -210,7 +219,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       'My Account',
                       style: TextStyle(
                         fontFamily: 'Dream-Avenue',
-                        fontSize: 32,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     GestureDetector(
@@ -220,12 +230,15 @@ class _AccountScreenState extends State<AccountScreen> {
                   ],
                 ),
               ),
-              
+
               // Profile Info
               Container(
                 width: double.infinity,
                 color: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 32,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -250,7 +263,11 @@ class _AccountScreenState extends State<AccountScreen> {
                           shape: BoxShape.circle,
                           color: AppColors.background,
                         ),
-                        child: const Icon(Icons.person_outline, size: 50, color: Colors.black),
+                        child: const Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 24),
@@ -258,10 +275,10 @@ class _AccountScreenState extends State<AccountScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Me',
+                          'Albert',
                           style: TextStyle(
                             fontFamily: 'Dream-Avenue',
-                            fontSize: 36,
+                            fontSize: 20,
                           ),
                         ),
                         const Text(
@@ -271,14 +288,15 @@ class _AccountScreenState extends State<AccountScreen> {
                             fontSize: 14,
                             color: Colors.black87,
                           ),
-                          overflow: TextOverflow.ellipsis, // Added overflow to prevent issues if text is too long
+                          overflow: TextOverflow
+                              .ellipsis, // Added overflow to prevent issues if text is too long
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // Stats
               Container(
                 width: double.infinity,
@@ -292,28 +310,37 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 28),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildStat(Icons.checkroom_outlined, '42', 'fits created'),
                     _buildStat(Icons.group_outlined, '0', 'friends'),
-                    _buildStat(Icons.local_fire_department_outlined, '69', 'swag streak'),
+                    _buildStat(
+                      Icons.local_fire_department_outlined,
+                      '69',
+                      'swag streak',
+                    ),
                   ],
                 ),
               ),
-              
+
               // Editable Fields
-              Container( // No Expanded here
+              Container(
+                // No Expanded here
                 width: double.infinity,
                 color: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-                child: Column( // This Column does not need to be wrapped in SingleChildScrollView again
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 24,
+                ),
+                child: Column(
+                  // This Column does not need to be wrapped in SingleChildScrollView again
                   children: [
                     _buildGenderDropdownRow(),
                     _buildEditableRow('Height', _heightController),
                     _buildEditableRow('Waist', _waistController),
-                    
+
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: Row(
@@ -323,7 +350,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             'Temp Units',
                             style: TextStyle(
                               fontFamily: 'Dream-Avenue',
-                              fontSize: 28,
+                              fontSize: 20,
                             ),
                           ),
                           GestureDetector(
@@ -356,7 +383,11 @@ class _AccountScreenState extends State<AccountScreen> {
                                     child: Container(
                                       height: 36,
                                       decoration: BoxDecoration(
-                                        color: _isCelsius ? Colors.green : const Color(0xFFF79471), // green when Celsius, peach when F
+                                        color: _isCelsius
+                                            ? Colors.green
+                                            : const Color(
+                                                0xFFF79471,
+                                              ), // green when Celsius, peach when F
                                         borderRadius: BorderRadius.circular(18),
                                       ),
                                     ),
@@ -369,7 +400,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                             '°F',
                                             style: TextStyle(
                                               fontSize: 16,
-                                              color: !_isCelsius ? Colors.black : Colors.black54,
+                                              color: !_isCelsius
+                                                  ? Colors.black
+                                                  : Colors.black54,
                                             ),
                                           ),
                                         ),
@@ -380,7 +413,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                             '°C',
                                             style: TextStyle(
                                               fontSize: 16,
-                                              color: _isCelsius ? Colors.white : Colors.black54,
+                                              color: _isCelsius
+                                                  ? Colors.white
+                                                  : Colors.black54,
                                             ),
                                           ),
                                         ),

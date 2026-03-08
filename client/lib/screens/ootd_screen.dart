@@ -57,7 +57,8 @@ class _OotdScreenState extends State<OotdScreen> {
       serverUrl:
           'https://8e4d-97-104-30-252.ngrok-free.app/detect', // Backend server URL
       callbacks: ImageProcessingCallbacks(
-        onLoading: (loading) => setState(() => _isImageProcessing = loading), // Use new state var
+        onLoading: (loading) =>
+            setState(() => _isImageProcessing = loading), // Use new state var
         onImagePicked: (file) {
           /* Removed as _imageFile is removed from OotdScreenState */
         },
@@ -80,7 +81,9 @@ class _OotdScreenState extends State<OotdScreen> {
             _getOutfitSuggestion();
           } else {
             // If not enough clothes, ensure _isOutfitGenerating is false
-            setState(() { _isOutfitGenerating = false; });
+            setState(() {
+              _isOutfitGenerating = false;
+            });
           }
         },
       ),
@@ -97,7 +100,8 @@ class _OotdScreenState extends State<OotdScreen> {
       _isOutfitGenerating = true;
     });
 
-    OutfitSuggestion? newSuggestion; // Temporary variable for the new suggestion
+    OutfitSuggestion?
+    newSuggestion; // Temporary variable for the new suggestion
     try {
       newSuggestion = await _ollamaService.getOutfitSuggestion(
         _allTops,
@@ -159,17 +163,20 @@ class _OotdScreenState extends State<OotdScreen> {
     final Color bottomColor = _parseRgbString(_outfitSuggestion!.bottom.color);
 
     return Scaffold(
-      body: Stack( // Use a Stack to layer the content and the loading indicator
+      body: Stack(
+        // Use a Stack to layer the content and the loading indicator
         children: [
-          Column( // Your main content for the outfit suggestion
+          Column(
+            // Your main content for the outfit suggestion
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
-                  'Your Suggested Outfit:',
+                  'Outfit of the Day',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontFamily: 'Dream-Avenue',
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
