@@ -8,14 +8,14 @@ class AppColors {
   // --- Replace these with your actual color codes ---
 
   /// Primary brand color. Used for prominent active elements like buttons.
-  static const Color primary = Color(0xFFC2A892);
+  static const Color primary = Color(0xFFF6AC7F);
 
   /// Secondary brand color. Used for less prominent elements.
   static const Color secondary = Color(0xFFA67C52);
 
   static const Color tertiary = Color(0xFF8E7F71);
 
-  /// A background color used for the main screens of the app.
+  /// A background color used for the main screens of the arpp.
   static const Color background = Color(0xFFECEBE7);
 
   /// Default text color.
